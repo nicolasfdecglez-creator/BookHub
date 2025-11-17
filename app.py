@@ -14,7 +14,7 @@ def create_app():
     # Import models to set up user_loader
     from models import User
 
-    # Set up user_loader HERE (this was missing)
+    # Set up user_loader
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
