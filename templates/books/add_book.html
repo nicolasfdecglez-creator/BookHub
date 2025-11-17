@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Add Book{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Add New Book</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="author" class="form-label">Author <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="author" name="author" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="genre" class="form-label">Genre</label>
+                                <select class="form-select" id="genre" name="genre">
+                                    <option value="">Select Genre</option>
+                                    <option value="Fiction">Fiction</option>
+                                    <option value="Non-Fiction">Non-Fiction</option>
+                                    <option value="Science Fiction">Science Fiction</option>
+                                    <option value="Fantasy">Fantasy</option>
+                                    <option value="Mystery">Mystery</option>
+                                    <option value="Thriller">Thriller</option>
+                                    <option value="Romance">Romance</option>
+                                    <option value="Biography">Biography</option>
+                                    <option value="History">History</option>
+                                    <option value="Self-Help">Self-Help</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="status" class="form-label">Status</label>
+                                <select class="form-select" id="status" name="status">
+                                    <option value="To Read" selected>To Read</option>
+                                    <option value="Reading">Reading</option>
+                                    <option value="Completed">Completed</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="rating" class="form-label">Rating (1-5)</label>
+                            <select class="form-select" id="rating" name="rating">
+                                <option value="">Not Rated</option>
+                                <option value="1">⭐ 1</option>
+                                <option value="2">⭐⭐ 2</option>
+                                <option value="3">⭐⭐⭐ 3</option>
+                                <option value="4">⭐⭐⭐⭐ 4</option>
+                                <option value="5">⭐⭐⭐⭐⭐ 5</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="cover_image" class="form-label">Cover Image</label>
+                            <input type="file" class="form-control" id="cover_image" name="cover_image"
+                                accept="image/*">
+                            <small class="form-text text-muted">Allowed formats: JPG, PNG, GIF (Max 5MB)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="4"></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('books.list_books') }}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Add Book</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

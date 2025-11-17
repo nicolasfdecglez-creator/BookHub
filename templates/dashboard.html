@@ -52,9 +52,12 @@
     </div>
 </div>
 
-<div class="row mt-5">
-    <div class="col-12 text-center">
-        <p class="text-muted">Book management features coming soon!</p>
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">My Library</h5>
+        <p class="card-text">Manage your book collection</p>
+        <a href="{{ url_for('books.list_books') }}" class="btn btn-primary">View Books</a>
+        <a href="{{ url_for('books.add_book') }}" class="btn btn-success">Add Book</a>
     </div>
 </div>
 {% endblock %}

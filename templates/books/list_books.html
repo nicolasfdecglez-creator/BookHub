@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}My Books{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>My Book Collection</h2>
+        <a href="{{ url_for('books.add_book') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Book
+        </a>
+    </div>
+
+    {% if books %}
+    <div class="row">
+        {% for book in books %}
+        <div class="col-md-4 col-lg-3 mb-4">
+            <div class="card h-100 book-card">
+                <img src="{{ url_for('static', filename='uploads/covers/' + book.cover_image) }}" class="card-img-top"
+                    alt="{{ book.title }}" style="height: 300px; object-fit: cover;">
+                <div class="card-body">
+                    <h5 class="card-title">{{ book.title }}</h5>
+                    <p class="card-text text-muted">by {{ book.author }}</p>
+
+                    {% if book.genre %}
+                    <span class="badge bg-secondary mb-2">{{ book.genre }}</span>
+                    {% endif %}
+
+                    {% if book.status == 'Reading' %}
+                    <span class="badge bg-primary mb-2">{{ book.status }}</span>
+                    {% elif book.status == 'Completed' %}
+                    <span class="badge bg-success mb-2">{{ book.status }}</span>
+                    {% else %}
+                    <span class="badge bg-warning mb-2">{{ book.status }}</span>
+                    {% endif %}
+
+                    {% if book.rating %}
+                    <div class="mb-2">
+                        {% for i in range(book.rating) %}
+                        <span class="text-warning">⭐</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="btn-group w-100" role="group">
+                        <a href="{{ url_for('books.view_book', book_id=book.id) }}"
+                            class="btn btn-sm btn-outline-primary">View</a>
+                        <a href="{{ url_for('books.edit_book', book_id=book.id) }}"
+                            class="btn btn-sm btn-outline-secondary">Edit</a>
+                        <button type="button" class="btn btn-sm btn-outline-danger"onclick="confirmDelete({{ book.id }}, '{{ book.title }}')">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <h4>No books in your collection yet!</h4>
+        <p>Start building your library by adding your first book.</p>
+        <a href="{{ url_for('books.add_book') }}" class="btn btn-primary mt-2">Add Your First Book</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete "<span id="bookTitle"></span>"?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmDelete(bookId, bookTitle) {
+        document.getElementById('bookTitle').textContent = bookTitle;
+        document.getElementById('deleteForm').action = `/books/${bookId}/delete`;
+        var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        deleteModal.show();
+    }
+</script>
+
+<style>
+    .book-card {
+        transition: transform 0.2s;
+    }
+
+    .book-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}

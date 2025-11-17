@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}{{ book.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <img src="{{ url_for('static', filename='uploads/covers/' + book.cover_image) }}"
+                class="img-fluid rounded shadow" alt="{{ book.title }}">
+        </div>
+        <div class="col-md-8">
+            <h2>{{ book.title }}</h2>
+            <h5 class="text-muted">by {{ book.author }}</h5>
+
+            <hr>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <p><strong>Genre:</strong> {{ book.genre or 'Not specified' }}</p>
+                    <p><strong>Status:</strong>
+                        {% if book.status == 'Reading' %}
+                        <span class="badge bg-primary">{{ book.status }}</span>
+                        {% elif book.status == 'Completed' %}
+                        <span class="badge bg-success">{{ book.status }}</span>
+                        {% else %}
+                        <span class="badge bg-warning">{{ book.status }}</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Rating:</strong>
+                        {% if book.rating %}
+                        {% for i in range(book.rating) %}
+                        <span class="text-warning">⭐</span>
+                        {% endfor %}
+                        ({{ book.rating }}/5)
+                        {% else %}
+                        Not rated
+                        {% endif %}
+                    </p>
+                    <p><strong>Added:</strong> {{ book.date_added.strftime('%B %d, %Y') }}</p>
+                </div>
+            </div>
+
+            {% if book.notes %}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <strong>Notes</strong>
+                </div>
+                <div class="card-body">
+                    {{ book.notes }}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('books.list_books') }}" class="btn btn-secondary">Back to Library</a>
+                <a href="{{ url_for('books.edit_book', book_id=book.id) }}" class="btn btn-primary">Edit</a>
+                <button type="button" class="btn btn-danger"onclick="confirmDelete({{ book.id }}, '{{ book.title }}')">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete "<span id="bookTitle"></span>"?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmDelete(bookId, bookTitle) {
+        document.getElementById('bookTitle').textContent = bookTitle;
+        document.getElementById('deleteForm').action = `/books/${bookId}/delete`;
+        var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        deleteModal.show();
+    }
+</script>
+{% endblock %}
