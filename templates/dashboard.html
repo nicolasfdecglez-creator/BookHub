@@ -1,63 +1,129 @@
 {% extends "base.html" %}
 
+{% block title %}Dashboard - BookHub{% endblock %}
+
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <h1 class="display-4 text-center">My Book Collection</h1>
-        <p class="lead text-center text-muted">Welcome back, {{ current_user.username }}!</p>
-    </div>
-</div>
-
 <div class="row">
-    <div class="col-12">
-        <div class="alert alert-info">
-            <h5 class="alert-heading">📚 Your Library Awaits</h5>
-            <p class="mb-0">Start building your book collection! Add your first book to get started.</p>
-        </div>
-    </div>
-</div>
-
-<div class="row mt-4">
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h3 class="card-title">0</h3>
-                <p class="card-text">Books Total</p>
+    <div class="col-md-12">
+        <h1 class="mb-4">Welcome back, {{ current_user.username }}! 📚</h1>
+        
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card text-white bg-primary h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-book display-4"></i>
+                        <h5 class="card-title mt-2">Total Books</h5>
+                        <p class="card-text display-4">{{ current_user.books|length }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card text-white bg-success h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-check-circle display-4"></i>
+                        <h5 class="card-title mt-2">Completed</h5>
+                        <p class="card-text display-4">
+                            {{ current_user.books|selectattr('status', 'equalto', 'Completed')|list|length }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card text-white bg-info h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-book-half display-4"></i>
+                        <h5 class="card-title mt-2">Reading</h5>
+                        <p class="card-text display-4">
+                            {{ current_user.books|selectattr('status', 'equalto', 'Reading')|list|length }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card text-white bg-warning h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-bookmark display-4"></i>
+                        <h5 class="card-title mt-2">To Read</h5>
+                        <p class="card-text display-4">
+                            {{ current_user.books|selectattr('status', 'equalto', 'To Read')|list|length }}
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h3 class="card-title">0</h3>
-                <p class="card-text">To Read</p>
+        
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-lightning-charge"></i> Quick Actions</h5>
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('books.add_book') }}" class="btn btn-success">
+                                <i class="bi bi-plus-lg"></i> Add New Book
+                            </a>
+                            <a href="{{ url_for('books.list_books') }}" class="btn btn-primary">
+                                <i class="bi bi-collection"></i> Browse Library
+                            </a>
+                            <a href="{{ url_for('books.statistics') }}" class="btn btn-info">
+                                <i class="bi bi-graph-up"></i> View Statistics
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-person-circle"></i> Account Info</h5>
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>Username:</th>
+                                <td>{{ current_user.username }}</td>
+                            </tr>
+                            <tr>
+                                <th>Email:</th>
+                                <td>{{ current_user.email }}</td>
+                            </tr>
+                            <tr>
+                                <th>Member Since:</th>
+                                <td>{{ current_user.books[0].date_added.strftime('%B %Y') if current_user.books else 'Recently' }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h3 class="card-title">0</h3>
-                <p class="card-text">Reading Now</p>
+        
+        {% if current_user.books %}
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-clock-history"></i> Recently Added Books</h5>
+                        <div class="row">
+                            {% set sorted_books = current_user.books|sort(attribute='date_added', reverse=True) %}
+                            {% for book in sorted_books[:4] %}
+                            <div class="col-md-3 mb-3">
+                                <div class="card h-100">
+                                    <img src="{{ url_for('static', filename='uploads/covers/' + book.cover_image if not book.cover_image.startswith('img/') else book.cover_image) }}" 
+                                         class="card-img-top" alt="{{ book.title }}" style="height: 200px; object-fit: cover;">
+                                    <div class="card-body p-2">
+                                        <h6 class="card-title text-truncate" title="{{ book.title }}">{{ book.title }}</h6>
+                                        <p class="card-text">
+                                            <small class="text-muted">{{ book.author }}</small>
+                                        </p>
+                                        <a href="{{ url_for('books.view_book', book_id=book.id) }}" 
+                                           class="btn btn-sm btn-outline-primary w-100">View</a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h3 class="card-title">0</h3>
-                <p class="card-text">Completed</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="card">
-    <div class="card-body">
-        <h5 class="card-title">My Library</h5>
-        <p class="card-text">Manage your book collection</p>
-        <a href="{{ url_for('books.list_books') }}" class="btn btn-primary">View Books</a>
-        <a href="{{ url_for('books.add_book') }}" class="btn btn-success">Add Book</a>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

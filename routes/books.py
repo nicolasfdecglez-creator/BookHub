@@ -1,9 +1,9 @@
-# routes/books.py - Complete CRUD routes for books
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
-from werkzeug.utils import secure_filename
-from extensions import db
 from models import Book
+from extensions import db
+from werkzeug.utils import secure_filename
+from sqlalchemy import or_, func
 import os
 from datetime import datetime
 
@@ -17,7 +17,59 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-# CREATE - Add new book
+@books_bp.route('/books')
+@login_required
+def list_books():
+    search_query = request.args.get('search', '').strip()
+    genre_filter = request.args.get('genre', '')
+    status_filter = request.args.get('status', '')
+    rating_filter = request.args.get('rating', '')
+    sort_by = request.args.get('sort', 'date_added')
+
+    query = Book.query.filter_by(user_id=current_user.id)
+
+    if search_query:
+        query = query.filter(
+            or_(
+                Book.title.ilike(f'%{search_query}%'),
+                Book.author.ilike(f'%{search_query}%')
+            )
+        )
+
+    if genre_filter:
+        query = query.filter(Book.genre == genre_filter)
+
+    if status_filter:
+        query = query.filter(Book.status == status_filter)
+
+    if rating_filter:
+        query = query.filter(Book.rating == int(rating_filter))
+
+
+    if sort_by == 'title':
+        query = query.order_by(func.lower(Book.title).asc())
+    elif sort_by == 'author':
+        query = query.order_by(func.lower(Book.author).asc())
+    elif sort_by == 'rating':
+        query = query.order_by(Book.rating.desc().nullslast())
+    else:
+        query = query.order_by(Book.date_added.desc())
+
+    books = query.all()
+
+    all_books = Book.query.filter_by(user_id=current_user.id).all()
+    genres = sorted(set(book.genre for book in all_books if book.genre))
+    statuses = ['To Read', 'Reading', 'Completed']
+
+    return render_template('books/list_books.html',
+                           books=books,
+                           genres=genres,
+                           statuses=statuses,
+                           current_search=search_query,
+                           current_genre=genre_filter,
+                           current_status=status_filter,
+                           current_rating=rating_filter,
+                           current_sort=sort_by)
 
 
 @books_bp.route('/books/add', methods=['GET', 'POST'])
@@ -31,13 +83,7 @@ def add_book():
         rating = request.form.get('rating')
         notes = request.form.get('notes')
 
-        # Validation
-        if not title or not author:
-            flash('Title and Author are required!', 'danger')
-            return redirect(url_for('books.add_book'))
-
-        # Handle cover image upload
-        cover_image = 'default-cover.jpg'
+        cover_image = 'img/default-cover.jpg'
         if 'cover_image' in request.files:
             file = request.files['cover_image']
             if file and file.filename != '' and allowed_file(file.filename):
@@ -49,7 +95,6 @@ def add_book():
                 file.save(filepath)
                 cover_image = filename
 
-        # Create new book
         new_book = Book(
             title=title,
             author=author,
@@ -61,29 +106,13 @@ def add_book():
             user_id=current_user.id
         )
 
-        try:
-            db.session.add(new_book)
-            db.session.commit()
-            flash('Book added successfully!', 'success')
-            return redirect(url_for('books.list_books'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error adding book: {str(e)}', 'danger')
-            return redirect(url_for('books.add_book'))
+        db.session.add(new_book)
+        db.session.commit()
+
+        flash('Book added successfully!', 'success')
+        return redirect(url_for('books.list_books'))
 
     return render_template('books/add_book.html')
-
-# READ - List all books
-
-
-@books_bp.route('/books')
-@login_required
-def list_books():
-    books = Book.query.filter_by(user_id=current_user.id).order_by(
-        Book.date_added.desc()).all()
-    return render_template('books/list_books.html', books=books)
-
-# READ - View single book
 
 
 @books_bp.route('/books/<int:book_id>')
@@ -92,8 +121,6 @@ def view_book(book_id):
     book = Book.query.filter_by(
         id=book_id, user_id=current_user.id).first_or_404()
     return render_template('books/view_book.html', book=book)
-
-# UPDATE - Edit book
 
 
 @books_bp.route('/books/<int:book_id>/edit', methods=['GET', 'POST'])
@@ -107,21 +134,19 @@ def edit_book(book_id):
         book.author = request.form.get('author')
         book.genre = request.form.get('genre')
         book.status = request.form.get('status')
-        book.rating = int(request.form.get('rating')
-                          ) if request.form.get('rating') else None
+        rating = request.form.get('rating')
+        book.rating = int(rating) if rating else None
         book.notes = request.form.get('notes')
 
-        # Handle cover image update
         if 'cover_image' in request.files:
             file = request.files['cover_image']
             if file and file.filename != '' and allowed_file(file.filename):
-                # Delete old image if not default
-                if book.cover_image and book.cover_image != 'default-cover.jpg':
-                    old_file = os.path.join(UPLOAD_FOLDER, book.cover_image)
-                    if os.path.exists(old_file):
-                        os.remove(old_file)
+                if book.cover_image != 'img/default-cover.jpg':
+                    old_filepath = os.path.join(
+                        UPLOAD_FOLDER, book.cover_image)
+                    if os.path.exists(old_filepath):
+                        os.remove(old_filepath)
 
-                # Save new image
                 filename = secure_filename(file.filename)
                 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                 filename = f"{timestamp}_{filename}"
@@ -130,17 +155,11 @@ def edit_book(book_id):
                 file.save(filepath)
                 book.cover_image = filename
 
-        try:
-            db.session.commit()
-            flash('Book updated successfully!', 'success')
-            return redirect(url_for('books.view_book', book_id=book.id))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error updating book: {str(e)}', 'danger')
+        db.session.commit()
+        flash('Book updated successfully!', 'success')
+        return redirect(url_for('books.view_book', book_id=book.id))
 
     return render_template('books/edit_book.html', book=book)
-
-# DELETE - Remove book
 
 
 @books_bp.route('/books/<int:book_id>/delete', methods=['POST'])
@@ -149,21 +168,53 @@ def delete_book(book_id):
     book = Book.query.filter_by(
         id=book_id, user_id=current_user.id).first_or_404()
 
-    # Delete cover image if not default
-    if book.cover_image and book.cover_image != 'default-cover.jpg':
-        cover_path = os.path.join(UPLOAD_FOLDER, book.cover_image)
-        if os.path.exists(cover_path):
-            try:
-                os.remove(cover_path)
-            except Exception as e:
-                print(f"Error deleting image: {e}")
+    if book.cover_image != 'img/default-cover.jpg':
+        filepath = os.path.join(UPLOAD_FOLDER, book.cover_image)
+        if os.path.exists(filepath):
+            os.remove(filepath)
 
-    try:
-        db.session.delete(book)
-        db.session.commit()
-        flash('Book deleted successfully!', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error deleting book: {str(e)}', 'danger')
+    db.session.delete(book)
+    db.session.commit()
 
+    flash('Book deleted successfully!', 'success')
     return redirect(url_for('books.list_books'))
+
+
+@books_bp.route('/books/statistics')
+@login_required
+def statistics():
+    books = Book.query.filter_by(user_id=current_user.id).all()
+
+    total_books = len(books)
+    completed_books = len([b for b in books if b.status == 'Completed'])
+    reading_books = len([b for b in books if b.status == 'Reading'])
+    to_read_books = len([b for b in books if b.status == 'To Read'])
+
+    genre_counts = {}
+    for book in books:
+        if book.genre:
+            genre_counts[book.genre] = genre_counts.get(book.genre, 0) + 1
+
+    rating_counts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+    rated_books = [b for b in books if b.rating]
+    for book in rated_books:
+        rating_counts[book.rating] = rating_counts.get(book.rating, 0) + 1
+
+    avg_rating = sum(b.rating for b in rated_books) / \
+        len(rated_books) if rated_books else 0
+
+    top_rated = sorted([b for b in books if b.rating],
+                       key=lambda x: x.rating, reverse=True)[:5]
+
+    recent_books = sorted(books, key=lambda x: x.date_added, reverse=True)[:5]
+
+    return render_template('books/statistics.html',
+                           total_books=total_books,
+                           completed_books=completed_books,
+                           reading_books=reading_books,
+                           to_read_books=to_read_books,
+                           genre_counts=genre_counts,
+                           rating_counts=rating_counts,
+                           avg_rating=avg_rating,
+                           top_rated=top_rated,
+                           recent_books=recent_books)
