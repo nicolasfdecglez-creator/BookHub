@@ -51,7 +51,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="row">
             <div class="col-md-6 mb-3">
                 <div class="card">
@@ -67,6 +67,12 @@
                             <a href="{{ url_for('books.statistics') }}" class="btn btn-info">
                                 <i class="bi bi-graph-up"></i> View Statistics
                             </a>
+                            <a href="{{ url_for('books.search_book') }}" class="btn btn-info">
+                                <i class="bi bi-search"></i> Find & Add Books
+                            </a>
+                            <a href="{{ url_for('books.set_goals') }}" class="btn btn-warning">
+                                <i class="bi bi-target"></i> Reading Goals
+                            </a>                            
                         </div>
                     </div>
                 </div>

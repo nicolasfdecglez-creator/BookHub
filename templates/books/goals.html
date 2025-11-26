@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Reading Goals - BookHub{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <h1 class="mb-4">
+            <i class="bi bi-target"></i> Reading Goals for {{ current_year }}
+        </h1>
+        
+        <!-- Goal Progress Card -->
+        <div class="card mb-4">
+            <div class="card-body">
+                {% if current_goal %}
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5>Your Annual Goal</h5>
+                        <p class="text-muted">Read <strong>{{ current_goal }} books</strong> in {{ current_year }}</p>
+                        
+                        <div class="progress" style="height: 25px;">
+                            {% set progress_percent = (completed_this_year / current_goal * 100)|int %}
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: {{ progress_percent if progress_percent <= 100 else 100 }}%"
+                                 aria-valuenow="{{ completed_this_year }}" aria-valuemin="0" 
+                                 aria-valuemax="{{ current_goal }}">
+                                <strong>{{ completed_this_year }}/{{ current_goal }}</strong>
+                            </div>
+                        </div>
+                        
+                        <small class="text-muted d-block mt-2">
+                            {% if completed_this_year >= current_goal %}
+                            <i class="bi bi-check-circle-fill text-success"></i> 
+                            <strong>Congratulations!</strong> You've reached your goal! 🎉
+                            {% else %}
+                            <i class="bi bi-info-circle"></i>
+                            {{ current_goal - completed_this_year }} books to go
+                            {% endif %}
+                        </small>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="display-6 text-primary">{{ progress_percent }}%</div>
+                        <small class="text-muted">Complete</small>
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-exclamation-circle"></i> 
+                    <strong>No goal set yet.</strong> Set a reading goal to track your progress!
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Set/Edit Goal Form -->
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-pencil"></i> {% if current_goal %}Edit{% else %}Set{% endif %} Your Goal
+                </h5>
+                
+                <form method="POST" action="{{ url_for('books.set_goals') }}">
+                    <div class="mb-3">
+                        <label for="goal_books" class="form-label">
+                            How many books do you want to read in {{ current_year }}?
+                        </label>
+                        <div class="input-group input-group-lg">
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="goal_books" 
+                                   name="goal_books"
+                                   value="{{ current_goal if current_goal else 50 }}"
+                                   min="1"
+                                   max="365"
+                                   required>
+                            <span class="input-group-text">books</span>
+                        </div>
+                        <small class="text-muted d-block mt-2">
+                            Popular goals: 12 (1/month), 24 (2/month), 50, 52 (1/week)
+                        </small>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="bi bi-check-lg"></i> {% if current_goal %}Update{% else %}Set{% endif %} Goal
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Reading Tips Card -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-lightbulb"></i> Tips for Reaching Your Goal
+                </h5>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><strong>✓ Start small:</strong> 12 books (1 per month) is achievable for most readers</li>
+                    <li class="mb-2"><strong>✓ Mix lengths:</strong> Combine long novels with shorter books</li>
+                    <li class="mb-2"><strong>✓ Read consistently:</strong> Even 15 minutes a day adds up</li>
+                    <li class="mb-2"><strong>✓ Track progress:</strong> Mark books as "Completed" in your library</li>
+                    <li class="mb-2"><strong>✓ Don't stress:</strong> Reading should be fun, adjust your goal anytime</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="mt-4 text-center">
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

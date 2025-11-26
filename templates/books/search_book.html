@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Search Books - BookHub{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <h1 class="mb-4">
+            <i class="bi bi-search"></i> Find & Add Books
+        </h1>
+        
+        <div class="card">
+            <div class="card-body">
+                <p class="text-muted mb-4">
+                    Search by ISBN, book title, or author name. Data is pulled from Google Books database.
+                </p>
+                
+                <form method="POST" action="{{ url_for('books.search_book') }}">
+                    <div class="mb-3">
+                        <label for="search_term" class="form-label">
+                            <i class="bi bi-search"></i> Search Term
+                        </label>
+                        <div class="input-group input-group-lg">
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="search_term" 
+                                   name="search_term" 
+                                   placeholder="e.g., 9780134685991 or The Great Gatsby or F. Scott Fitzgerald"
+                                   required
+                                   autofocus>
+                            <button class="btn btn-primary" type="submit">
+                                <i class="bi bi-search"></i> Search
+                            </button>
+                        </div>
+                        <small class="text-muted d-block mt-2">
+                            💡 <strong>Pro tip:</strong> ISBN searches (13-digit numbers) are most accurate. Find ISBNs on book covers or on retailer websites like Amazon.
+                        </small>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="mt-4 text-center">
+            <p class="text-muted mb-3">Or add a book manually</p>
+            <a href="{{ url_for('books.add_book') }}" class="btn btn-outline-secondary btn-lg">
+                <i class="bi bi-plus-lg"></i> Add Book Manually
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

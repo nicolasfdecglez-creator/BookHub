@@ -57,6 +57,16 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('books.search_book') }}">
+                                <i class="bi bi-search"></i> Find Books
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('books.set_goals') }}">
+                                <i class="bi bi-target"></i> Goals
+                            </a>
+                        </li>                        
+                        <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('auth.logout') }}">
                                 <i class="bi bi-box-arrow-right"></i> Logout
                             </a>
